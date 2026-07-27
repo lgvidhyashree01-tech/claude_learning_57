@@ -1,0 +1,40 @@
+*What I learnt from this task:*
+1. Code makes it work. Design makes people want to use it
+2. Continued capstone conversation from Day 56. Re-uploaded 10-Day Blueprint to keep context
+3. Pasted Product Refinement & User Experience prompt
+4. Shared repo link + deployed site link with Claude when asked
+5. Confirmed Day 7 tasks from Sprint Workbook: UI polish, UX flows, accessibility, responsiveness
+6. Worked through milestones, adding every file in the exact location Claude specified
+7. Extracted 1 ZIP package from Claude and replaced files per instructions
+8. Ran every command and followed manual steps for assets + config
+9. Debugged 1 CSS/layout issue with Claude before continuing
+10. Verified every Day 7 Sprint Workbook task was implemented
+11. Had Claude do a 3-role review: Senior Product Designer, UI/UX Designer, Senior Software Engineer
+12. Worked through refinement pass: layout, spacing, typography, colors, responsiveness
+13. Fixed navigation, loading/empty/error states, accessibility, and added micro-interactions
+14. Did full regression test. Every feature still works after refinement
+15. Deployed updated version to [free-tier hosting]
+16. Tested live app and captured before/after screenshots of UI updates
+17. Updated documentation: README, UI-WIREFRAMES.md, DAY7-SUMMARY.md
+18. Committed with meaningful message: `refactor: Day7 UX/UI polish + a11y + responsiveness`
+19. Pushed to GitHub
+20. Got Claude’s summary: Day 7 done. Day 8 = edge cases, testing, and demo prep
+21. Learned: 1 day of polish = 10x perceived quality
+
+*Tools used:*
+1. Claude AI
+2. Product Refinement & User Experience prompt
+3. Same capstone thread from Day 51-56
+4. Solution video
+5. Watched for UI/UX refinement walkthrough
+6. Git + GitHub
+7. Project repo for code + docs
+8. AB Talks challenge repo for Day57 folder
+9. Free-tier Hosting Platform
+10. Vercel/Netlify/Railway for redeployment
+11. Browser + DevTools
+12. Test responsiveness, accessibility, and UI states
+13. Lighthouse / Accessibility checker
+14. For a11y and performance pass
+15. Screenshot tool
+16. Capture before/after UI + mobile views
