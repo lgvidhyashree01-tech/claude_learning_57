@@ -1,0 +1,1056 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Envelope — Budget Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #F5F2EA;
+    --paper: #FFFFFF;
+    --paper-soft: #FAF8F3;
+    --ink: #1B2A3D;
+    --ink-soft: #6B7684;
+    --line: #E4DFD1;
+    --teal: #2F6F62;
+    --teal-soft: #E7F0EC;
+    --coral: #C1554D;
+    --coral-soft: #F6E7E5;
+    --gold: #C9A227;
+    --slate: #4A5F73;
+    --plum: #7D5BA6;
+    --shadow: rgba(27, 42, 61, 0.10);
+  }
+
+  *{ box-sizing: border-box; }
+  html, body{ margin: 0; padding: 0; min-height: 100%; }
+
+  body{
+    background:
+      radial-gradient(circle, rgba(27,42,61,0.06) 1px, transparent 1px) 0 0 / 22px 22px,
+      var(--bg);
+    font-family: 'Inter', sans-serif;
+    color: var(--ink);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 44px 18px 90px;
+    min-height: 100vh;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+  }
+
+  .app{
+    width: 100%;
+    max-width: 880px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .card{
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    box-shadow: 0 10px 30px var(--shadow);
+  }
+
+  /* Header */
+  .header-card{ padding: 30px 32px; }
+  .header-top{ display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px; }
+
+  .brand-eyebrow{ font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--teal); margin: 0 0 6px; font-weight: 600; }
+  .brand-title{ font-family: 'Playfair Display', serif; font-size: clamp(26px, 4.5vw, 34px); font-weight: 700; margin: 0 0 6px; color: var(--ink); }
+  .brand-tagline{ font-size: 13.5px; color: var(--ink-soft); margin: 0; }
+
+  .month-nav{ display: flex; align-items: center; gap: 12px; }
+  .month-btn{
+    width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--line); background: var(--paper-soft);
+    color: var(--ink); cursor: pointer; font-size: 15px; display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s ease, border-color 0.15s ease;
+  }
+  .month-btn:hover{ background: var(--teal-soft); border-color: var(--teal); color: var(--teal); }
+  .month-btn:focus-visible{ outline: 2px solid var(--teal); outline-offset: 2px; }
+  .month-label{ font-family: 'IBM Plex Mono', monospace; font-size: 13.5px; font-weight: 600; min-width: 128px; text-align: center; }
+  .today-btn{
+    font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em;
+    background: transparent; border: 1px solid var(--line); color: var(--ink-soft); padding: 5px 9px; border-radius: 6px; cursor: pointer;
+  }
+  .today-btn:hover{ color: var(--teal); border-color: var(--teal); }
+  .today-btn:focus-visible{ outline: 2px solid var(--teal); outline-offset: 2px; }
+
+  .sync-row{ display: flex; align-items: center; gap: 8px; margin-top: 16px; }
+  .sync-dot{ width: 7px; height: 7px; border-radius: 50%; background: var(--teal); }
+  .sync-dot.saving{ background: var(--gold); }
+  .sync-dot.error{ background: var(--coral); }
+  .sync-text{ font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--ink-soft); }
+
+  /* Summary cards */
+  .summary-grid{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .stat-card{ padding: 20px 20px; display: flex; flex-direction: column; gap: 6px; }
+  .stat-label{ font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-soft); }
+  .stat-value{ font-family: 'IBM Plex Mono', monospace; font-size: 22px; font-weight: 600; }
+  .stat-value.income{ color: var(--teal); }
+  .stat-value.expense{ color: var(--coral); }
+  .stat-value.positive{ color: var(--teal); }
+  .stat-value.negative{ color: var(--coral); }
+  .stat-sub{ font-size: 11.5px; color: var(--ink-soft); }
+
+  /* Section headers */
+  .section{ padding: 26px 32px; }
+  .section-header{ display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; flex-wrap: wrap; gap: 10px; }
+  .section-title{ font-family: 'Playfair Display', serif; font-size: 19px; font-weight: 700; margin: 0; }
+  .section-sub{ font-size: 12px; color: var(--ink-soft); margin: 2px 0 0; }
+
+  .link-btn{
+    font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.05em;
+    background: transparent; border: none; color: var(--teal); cursor: pointer; text-decoration: underline; padding: 2px;
+  }
+  .link-btn:hover{ color: var(--ink); }
+  .link-btn:focus-visible{ outline: 2px solid var(--teal); outline-offset: 2px; }
+
+  /* Envelopes */
+  .envelope-form{
+    display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; padding: 16px; background: var(--paper-soft);
+    border: 1px dashed var(--line); border-radius: 8px; margin-bottom: 18px;
+  }
+  .field{ display: flex; flex-direction: column; gap: 4px; }
+  .field label{ font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-soft); }
+  .field input, .field select{
+    font-family: 'Inter', sans-serif; font-size: 13.5px; color: var(--ink); background: var(--paper);
+    border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; outline: none;
+  }
+  .field input:focus, .field select:focus{ border-color: var(--teal); }
+  .field input:focus-visible, .field select:focus-visible{ outline: 2px solid var(--teal); outline-offset: 1px; }
+  .field-name{ flex: 1 1 160px; }
+
+  .primary-btn{
+    font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600; color: #fff; background: var(--teal);
+    border: none; border-radius: 6px; padding: 9px 16px; cursor: pointer; transition: background 0.15s ease, transform 0.1s ease;
+  }
+  .primary-btn:hover{ background: #255a4f; }
+  .primary-btn:active{ transform: scale(0.97); }
+  .primary-btn:focus-visible{ outline: 2px solid var(--ink); outline-offset: 2px; }
+
+  .envelope-grid{ display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 14px; }
+  .envelope-card{ border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; background: var(--paper-soft); }
+  .envelope-top{ display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .envelope-dot{ width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .envelope-name{ font-weight: 600; font-size: 14px; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .envelope-actions{ display: flex; gap: 2px; flex-shrink: 0; }
+  .env-icon-btn{ background: transparent; border: none; color: var(--ink-soft); cursor: pointer; font-size: 13px; padding: 3px 5px; }
+  .env-icon-btn:hover{ color: var(--coral); }
+  .env-icon-btn:focus-visible{ outline: 2px solid var(--teal); outline-offset: 2px; }
+
+  .envelope-amounts{ display: flex; justify-content: space-between; font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; margin-bottom: 6px; }
+  .envelope-spent{ color: var(--ink); font-weight: 600; }
+  .envelope-budget{ color: var(--ink-soft); cursor: pointer; }
+  .envelope-budget:hover{ text-decoration: underline; }
+  .envelope-budget-input{
+    font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; width: 70px; border: 1px solid var(--teal);
+    border-radius: 4px; padding: 1px 4px; outline: none; text-align: right;
+  }
+
+  .envelope-track{ height: 7px; border-radius: 4px; background: var(--line); overflow: hidden; }
+  .envelope-fill{ height: 100%; border-radius: 4px; transition: width 0.25s ease; }
+  .envelope-remaining{ font-size: 11px; color: var(--ink-soft); margin-top: 6px; }
+  .envelope-remaining.over{ color: var(--coral); font-weight: 600; }
+
+  /* Transaction form */
+  .txn-form{ display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; padding: 18px; background: var(--paper-soft); border: 1px dashed var(--line); border-radius: 8px; margin-bottom: 18px; }
+  .field-desc{ flex: 1 1 200px; }
+  .type-toggle{ display: flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+  .type-toggle button{
+    font-family: 'Inter', sans-serif; font-size: 12.5px; font-weight: 600; padding: 8px 14px; border: none; cursor: pointer;
+    background: var(--paper); color: var(--ink-soft);
+  }
+  .type-toggle button.active-expense{ background: var(--coral-soft); color: var(--coral); }
+  .type-toggle button.active-income{ background: var(--teal-soft); color: var(--teal); }
+  .type-toggle button:focus-visible{ outline: 2px solid var(--teal); outline-offset: -2px; }
+
+  /* Controls row */
+  .controls-row{ display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .search-box{ display: flex; align-items: center; gap: 6px; border: 1px solid var(--line); border-radius: 6px; padding: 7px 10px; flex: 1 1 200px; max-width: 260px; background: var(--paper-soft); }
+  .search-box svg{ opacity: 0.5; flex-shrink: 0; }
+  .search-box input{ border: none; background: transparent; outline: none; font-size: 13px; width: 100%; font-family: 'Inter', sans-serif; }
+
+  .filter-controls{ display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .filter-controls select{
+    font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: var(--ink); background: var(--paper-soft);
+    border: 1px solid var(--line); border-radius: 6px; padding: 6px 9px; cursor: pointer;
+  }
+
+  /* Transaction list */
+  .txn-list{ display: flex; flex-direction: column; }
+  .txn-row{
+    display: flex; align-items: center; gap: 14px; padding: 13px 4px; border-bottom: 1px solid var(--line);
+  }
+  .txn-row:last-child{ border-bottom: none; }
+  .txn-date{ font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: var(--ink-soft); width: 58px; flex-shrink: 0; }
+  .txn-cat-dot{ width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+  .txn-main{ flex: 1; min-width: 0; }
+  .txn-desc{ font-size: 14px; font-weight: 500; cursor: pointer; }
+  .txn-desc:hover{ text-decoration: underline dotted; }
+  .txn-cat-pill{ font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--ink-soft); margin-top: 2px; }
+  .txn-amount{ font-family: 'IBM Plex Mono', monospace; font-size: 14.5px; font-weight: 600; white-space: nowrap; flex-shrink: 0; }
+  .txn-amount.income{ color: var(--teal); }
+  .txn-amount.expense{ color: var(--coral); }
+  .txn-actions{ display: flex; gap: 2px; flex-shrink: 0; }
+  .txn-icon-btn{ background: transparent; border: none; color: var(--ink-soft); cursor: pointer; font-size: 13.5px; padding: 4px 6px; }
+  .txn-icon-btn:hover{ color: var(--coral); }
+  .txn-icon-btn:focus-visible{ outline: 2px solid var(--teal); outline-offset: 2px; }
+
+  .txn-edit-row{ display: flex; flex-wrap: wrap; gap: 8px; padding: 12px 4px; border-bottom: 1px solid var(--line); background: var(--paper-soft); align-items: flex-end; }
+  .txn-edit-row .field input, .txn-edit-row .field select{ font-size: 12.5px; padding: 6px 8px; }
+  .mini-btn{
+    font-family: 'IBM Plex Mono', monospace; font-size: 11px; text-transform: uppercase; padding: 7px 12px; border: none;
+    border-radius: 6px; cursor: pointer; font-weight: 600;
+  }
+  .mini-btn.save{ background: var(--teal); color: #fff; }
+  .mini-btn.cancel{ background: transparent; color: var(--ink-soft); border: 1px solid var(--line); }
+
+  .empty-state{ padding: 34px 10px; text-align: center; color: var(--ink-soft); font-size: 13.5px; font-style: italic; }
+
+  .app-footer{ max-width: 880px; width: 100%; text-align: center; margin-top: 6px; font-size: 12px; color: var(--ink-soft); }
+
+  .loading-state{ padding: 60px 32px; text-align: center; color: var(--ink-soft); font-family: 'IBM Plex Mono', monospace; font-size: 13px; }
+
+  @media (max-width: 720px){
+    .summary-grid{ grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 520px){
+    .header-card{ padding: 24px 20px; }
+    .section{ padding: 20px 20px; }
+    .summary-grid{ grid-template-columns: 1fr 1fr; gap: 10px; }
+    .stat-value{ font-size: 18px; }
+    .txn-date{ width: 44px; }
+    .header-top{ flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app" id="appRoot">
+  <div class="card loading-state" id="loadingState">Opening your ledger…</div>
+</div>
+
+<footer class="app-footer">
+  Built with Claude as part of the AB Talks 60-Day Claude AI Challenge.
+</footer>
+
+<template id="appTemplate">
+  <div class="card header-card">
+    <div class="header-top">
+      <div>
+        <p class="brand-eyebrow">Budget Tracker</p>
+        <h1 class="brand-title">Envelope</h1>
+        <p class="brand-tagline">Give every dollar a job.</p>
+      </div>
+      <div>
+        <div class="month-nav">
+          <button class="month-btn" id="prevMonthBtn" aria-label="Previous month">‹</button>
+          <span class="month-label" id="monthLabel">—</span>
+          <button class="month-btn" id="nextMonthBtn" aria-label="Next month">›</button>
+        </div>
+        <div style="display:flex; justify-content:flex-end; margin-top:8px;">
+          <button class="today-btn" id="todayBtn">This month</button>
+        </div>
+      </div>
+    </div>
+    <div class="sync-row">
+      <span class="sync-dot" id="syncDot"></span>
+      <span class="sync-text" id="syncText">Saved</span>
+    </div>
+  </div>
+
+  <div class="summary-grid">
+    <div class="card stat-card">
+      <span class="stat-label">Income</span>
+      <span class="stat-value income" id="statIncome">$0.00</span>
+      <span class="stat-sub" id="statIncomeSub">this month</span>
+    </div>
+    <div class="card stat-card">
+      <span class="stat-label">Expenses</span>
+      <span class="stat-value expense" id="statExpense">$0.00</span>
+      <span class="stat-sub" id="statExpenseSub">this month</span>
+    </div>
+    <div class="card stat-card">
+      <span class="stat-label">Net Balance</span>
+      <span class="stat-value" id="statNet">$0.00</span>
+      <span class="stat-sub" id="statNetSub">income minus expenses</span>
+    </div>
+    <div class="card stat-card">
+      <span class="stat-label">Top Category</span>
+      <span class="stat-value" id="statTopCat" style="font-size:16px;">—</span>
+      <span class="stat-sub" id="statTopCatSub">by spend</span>
+    </div>
+  </div>
+
+  <div class="card section">
+    <div class="section-header">
+      <div>
+        <h2 class="section-title">Envelopes</h2>
+        <p class="section-sub">Set a monthly budget per category and track what's left.</p>
+      </div>
+      <button class="link-btn" id="toggleEnvelopeFormBtn">+ New envelope</button>
+    </div>
+
+    <div class="envelope-form" id="envelopeForm" hidden>
+      <div class="field field-name">
+        <label for="envNameInput">Category name</label>
+        <input type="text" id="envNameInput" placeholder="e.g. Groceries" maxlength="40">
+      </div>
+      <div class="field">
+        <label for="envBudgetInput">Monthly budget</label>
+        <input type="number" id="envBudgetInput" placeholder="0.00" min="0" step="0.01" style="width:110px;">
+      </div>
+      <button type="button" class="primary-btn" id="addEnvelopeBtn">Add envelope</button>
+    </div>
+
+    <div class="envelope-grid" id="envelopeGrid"></div>
+    <p class="empty-state" id="envelopeEmptyState" hidden>No envelopes yet. Add one above to start budgeting by category.</p>
+  </div>
+
+  <div class="card section">
+    <div class="section-header">
+      <div>
+        <h2 class="section-title">Add a transaction</h2>
+        <p class="section-sub">Log income or an expense for the selected month.</p>
+      </div>
+    </div>
+
+    <form class="txn-form" id="txnForm">
+      <div class="field field-desc">
+        <label for="txnDescInput">Description</label>
+        <input type="text" id="txnDescInput" placeholder="e.g. Farmers market" maxlength="120" required>
+      </div>
+      <div class="field">
+        <label for="txnAmountInput">Amount</label>
+        <input type="number" id="txnAmountInput" placeholder="0.00" min="0" step="0.01" style="width:110px;" required>
+      </div>
+      <div class="field">
+        <label>Type</label>
+        <div class="type-toggle">
+          <button type="button" id="typeExpenseBtn" class="active-expense">Expense</button>
+          <button type="button" id="typeIncomeBtn">Income</button>
+        </div>
+      </div>
+      <div class="field">
+        <label for="txnCategorySelect">Category</label>
+        <select id="txnCategorySelect" style="width:150px;"></select>
+      </div>
+      <div class="field">
+        <label for="txnDateInput">Date</label>
+        <input type="date" id="txnDateInput">
+      </div>
+      <button type="submit" class="primary-btn">Add transaction</button>
+    </form>
+  </div>
+
+  <div class="card section">
+    <div class="section-header">
+      <div>
+        <h2 class="section-title">Transactions</h2>
+        <p class="section-sub" id="txnCountLabel">0 transactions this month</p>
+      </div>
+    </div>
+
+    <div class="controls-row">
+      <div class="search-box">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <input type="text" id="txnSearchInput" placeholder="Search transactions…">
+      </div>
+      <div class="filter-controls">
+        <select id="txnTypeFilter">
+          <option value="all">All types</option>
+          <option value="income">Income only</option>
+          <option value="expense">Expenses only</option>
+        </select>
+        <select id="txnCategoryFilter">
+          <option value="all">All categories</option>
+        </select>
+        <select id="txnSortSelect">
+          <option value="newest">Newest first</option>
+          <option value="oldest">Oldest first</option>
+          <option value="amount-high">Amount: high to low</option>
+          <option value="amount-low">Amount: low to high</option>
+          <option value="alpha">Description A → Z</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="txn-list" id="txnList"></div>
+    <p class="empty-state" id="txnEmptyState" hidden></p>
+  </div>
+</template>
+
+<script>
+(function(){
+  var STORAGE_KEY = 'envelope-budget-data';
+  var transactions = [];
+  var envelopes = []; // { id, name, budget }
+  var txnIdCounter = 1;
+  var envIdCounter = 1;
+
+  var currentMonth = new Date().getMonth();
+  var currentYear = new Date().getFullYear();
+  var currentType = 'expense';
+  var editingTxnId = null;
+  var searchQuery = '';
+  var typeFilter = 'all';
+  var categoryFilter = 'all';
+  var currentSort = 'newest';
+
+  var els = {};
+  var saveTimer = null;
+
+  var PALETTE = ['#2F6F62', '#C9A227', '#C1554D', '#4A5F73', '#7D5BA6', '#3E7CB1', '#9A6735'];
+
+  function byId(id){ return document.getElementById(id); }
+
+  function mountApp(){
+    var root = byId('appRoot');
+    var tpl = byId('appTemplate');
+    root.innerHTML = '';
+    root.appendChild(tpl.content.cloneNode(true));
+
+    els.prevMonthBtn = byId('prevMonthBtn');
+    els.nextMonthBtn = byId('nextMonthBtn');
+    els.todayBtn = byId('todayBtn');
+    els.monthLabel = byId('monthLabel');
+    els.syncDot = byId('syncDot');
+    els.syncText = byId('syncText');
+
+    els.statIncome = byId('statIncome');
+    els.statIncomeSub = byId('statIncomeSub');
+    els.statExpense = byId('statExpense');
+    els.statExpenseSub = byId('statExpenseSub');
+    els.statNet = byId('statNet');
+    els.statNetSub = byId('statNetSub');
+    els.statTopCat = byId('statTopCat');
+    els.statTopCatSub = byId('statTopCatSub');
+
+    els.toggleEnvelopeFormBtn = byId('toggleEnvelopeFormBtn');
+    els.envelopeForm = byId('envelopeForm');
+    els.envNameInput = byId('envNameInput');
+    els.envBudgetInput = byId('envBudgetInput');
+    els.addEnvelopeBtn = byId('addEnvelopeBtn');
+    els.envelopeGrid = byId('envelopeGrid');
+    els.envelopeEmptyState = byId('envelopeEmptyState');
+
+    els.txnForm = byId('txnForm');
+    els.txnDescInput = byId('txnDescInput');
+    els.txnAmountInput = byId('txnAmountInput');
+    els.typeExpenseBtn = byId('typeExpenseBtn');
+    els.typeIncomeBtn = byId('typeIncomeBtn');
+    els.txnCategorySelect = byId('txnCategorySelect');
+    els.txnDateInput = byId('txnDateInput');
+
+    els.txnCountLabel = byId('txnCountLabel');
+    els.txnSearchInput = byId('txnSearchInput');
+    els.txnTypeFilter = byId('txnTypeFilter');
+    els.txnCategoryFilter = byId('txnCategoryFilter');
+    els.txnSortSelect = byId('txnSortSelect');
+    els.txnList = byId('txnList');
+    els.txnEmptyState = byId('txnEmptyState');
+
+    els.txnDateInput.value = todayISO();
+
+    bindEvents();
+    renderAll();
+  }
+
+  function todayISO(){
+    var d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+
+  function setSyncStatus(state){
+    els.syncDot.classList.remove('saving', 'error');
+    if (state === 'saving'){ els.syncDot.classList.add('saving'); els.syncText.textContent = 'Saving…'; }
+    else if (state === 'error'){ els.syncDot.classList.add('error'); els.syncText.textContent = 'Save failed — retrying'; }
+    else { els.syncText.textContent = 'Saved'; }
+  }
+
+  function scheduleSave(){
+    setSyncStatus('saving');
+    if (saveTimer) clearTimeout(saveTimer);
+    saveTimer = setTimeout(persistData, 400);
+  }
+
+  async function persistData(){
+    try{
+      var payload = JSON.stringify({
+        transactions: transactions,
+        envelopes: envelopes,
+        txnIdCounter: txnIdCounter,
+        envIdCounter: envIdCounter
+      });
+      var result = await window.storage.set(STORAGE_KEY, payload, false);
+      if (!result){ setSyncStatus('error'); return; }
+      setSyncStatus('saved');
+    } catch (err){
+      console.error('Envelope save error:', err);
+      setSyncStatus('error');
+    }
+  }
+
+  async function loadData(){
+    try{
+      var result = await window.storage.get(STORAGE_KEY, false);
+      if (result && result.value){
+        var parsed = JSON.parse(result.value);
+        transactions = Array.isArray(parsed.transactions) ? parsed.transactions : [];
+        envelopes = Array.isArray(parsed.envelopes) ? parsed.envelopes : [];
+        txnIdCounter = typeof parsed.txnIdCounter === 'number' ? parsed.txnIdCounter : (transactions.length + 1);
+        envIdCounter = typeof parsed.envIdCounter === 'number' ? parsed.envIdCounter : (envelopes.length + 1);
+      }
+    } catch (err){
+      transactions = [];
+      envelopes = [];
+      txnIdCounter = 1;
+      envIdCounter = 1;
+    }
+  }
+
+  function categoryColor(name){
+    var hash = 0;
+    for (var i = 0; i < name.length; i++){ hash = (hash * 31 + name.charCodeAt(i)) >>> 0; }
+    return PALETTE[hash % PALETTE.length];
+  }
+
+  function formatCurrency(num){
+    var sign = num < 0 ? '-' : '';
+    return sign + '$' + Math.abs(num).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  function isInCurrentMonth(dateStr){
+    if (!dateStr) return false;
+    var parts = dateStr.split('-');
+    var y = parseInt(parts[0], 10);
+    var m = parseInt(parts[1], 10) - 1;
+    return y === currentYear && m === currentMonth;
+  }
+
+  function monthTransactions(){
+    return transactions.filter(function(t){ return isInCurrentMonth(t.date); });
+  }
+
+  function renderAll(){
+    renderMonthLabel();
+    renderSummary();
+    renderEnvelopes();
+    renderCategoryOptions();
+    renderTransactions();
+  }
+
+  function renderMonthLabel(){
+    var d = new Date(currentYear, currentMonth, 1);
+    els.monthLabel.textContent = d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  }
+
+  function renderSummary(){
+    var monthTxns = monthTransactions();
+    var income = monthTxns.filter(function(t){ return t.type === 'income'; }).reduce(function(s, t){ return s + t.amount; }, 0);
+    var expense = monthTxns.filter(function(t){ return t.type === 'expense'; }).reduce(function(s, t){ return s + t.amount; }, 0);
+    var net = income - expense;
+
+    els.statIncome.textContent = formatCurrency(income);
+    els.statExpense.textContent = formatCurrency(expense);
+    els.statNet.textContent = formatCurrency(net);
+    els.statNet.classList.remove('positive', 'negative');
+    els.statNet.classList.add(net >= 0 ? 'positive' : 'negative');
+
+    if (income > 0){
+      var rate = Math.round((net / income) * 100);
+      els.statNetSub.textContent = rate + '% savings rate';
+    } else {
+      els.statNetSub.textContent = 'income minus expenses';
+    }
+
+    var byCategory = {};
+    monthTxns.filter(function(t){ return t.type === 'expense'; }).forEach(function(t){
+      var cat = t.category || 'Uncategorized';
+      byCategory[cat] = (byCategory[cat] || 0) + t.amount;
+    });
+    var topCat = null, topAmt = 0;
+    Object.keys(byCategory).forEach(function(cat){
+      if (byCategory[cat] > topAmt){ topAmt = byCategory[cat]; topCat = cat; }
+    });
+    if (topCat){
+      els.statTopCat.textContent = topCat;
+      els.statTopCatSub.textContent = formatCurrency(topAmt) + ' spent';
+    } else {
+      els.statTopCat.textContent = '—';
+      els.statTopCatSub.textContent = 'by spend';
+    }
+  }
+
+  function spentForCategory(name){
+    return monthTransactions()
+      .filter(function(t){ return t.type === 'expense' && t.category === name; })
+      .reduce(function(s, t){ return s + t.amount; }, 0);
+  }
+
+  function renderEnvelopes(){
+    els.envelopeGrid.innerHTML = '';
+    if (envelopes.length === 0){
+      els.envelopeEmptyState.hidden = false;
+      return;
+    }
+    els.envelopeEmptyState.hidden = true;
+
+    envelopes.forEach(function(env){
+      var spent = spentForCategory(env.name);
+      var budget = env.budget || 0;
+      var pct = budget > 0 ? Math.min(100, Math.round((spent / budget) * 100)) : (spent > 0 ? 100 : 0);
+      var over = budget > 0 && spent > budget;
+      var color = categoryColor(env.name);
+
+      var card = document.createElement('div');
+      card.className = 'envelope-card';
+
+      var top = document.createElement('div');
+      top.className = 'envelope-top';
+      var dot = document.createElement('span');
+      dot.className = 'envelope-dot';
+      dot.style.background = color;
+      top.appendChild(dot);
+      var name = document.createElement('span');
+      name.className = 'envelope-name';
+      name.textContent = env.name;
+      top.appendChild(name);
+
+      var actions = document.createElement('div');
+      actions.className = 'envelope-actions';
+      var delBtn = document.createElement('button');
+      delBtn.type = 'button';
+      delBtn.className = 'env-icon-btn';
+      delBtn.setAttribute('aria-label', 'Delete envelope ' + env.name);
+      delBtn.textContent = '×';
+      delBtn.addEventListener('click', function(){
+        var confirmed = window.confirm('Delete the "' + env.name + '" envelope? Existing transactions will keep this category label.');
+        if (!confirmed) return;
+        envelopes = envelopes.filter(function(e){ return e.id !== env.id; });
+        scheduleSave();
+        renderAll();
+      });
+      actions.appendChild(delBtn);
+      top.appendChild(actions);
+
+      card.appendChild(top);
+
+      var amounts = document.createElement('div');
+      amounts.className = 'envelope-amounts';
+      var spentSpan = document.createElement('span');
+      spentSpan.className = 'envelope-spent';
+      spentSpan.textContent = formatCurrency(spent);
+      amounts.appendChild(spentSpan);
+
+      var budgetSpan = document.createElement('span');
+      budgetSpan.className = 'envelope-budget';
+      budgetSpan.textContent = 'of ' + formatCurrency(budget);
+      budgetSpan.title = 'Click to edit budget';
+      budgetSpan.addEventListener('click', function(){
+        var input = document.createElement('input');
+        input.type = 'number';
+        input.className = 'envelope-budget-input';
+        input.value = budget;
+        input.min = '0';
+        input.step = '0.01';
+        amounts.replaceChild(input, budgetSpan);
+        input.focus();
+        input.select();
+
+        function commit(){
+          var val = parseFloat(input.value);
+          env.budget = isNaN(val) || val < 0 ? 0 : val;
+          scheduleSave();
+          renderAll();
+        }
+        input.addEventListener('blur', commit);
+        input.addEventListener('keydown', function(e){
+          if (e.key === 'Enter'){ e.preventDefault(); commit(); }
+          if (e.key === 'Escape'){ e.preventDefault(); renderAll(); }
+        });
+      });
+      amounts.appendChild(budgetSpan);
+      card.appendChild(amounts);
+
+      var track = document.createElement('div');
+      track.className = 'envelope-track';
+      var fill = document.createElement('div');
+      fill.className = 'envelope-fill';
+      fill.style.width = pct + '%';
+      fill.style.background = over ? 'var(--coral)' : color;
+      track.appendChild(fill);
+      card.appendChild(track);
+
+      var remaining = document.createElement('div');
+      remaining.className = 'envelope-remaining' + (over ? ' over' : '');
+      if (budget > 0){
+        remaining.textContent = over
+          ? formatCurrency(spent - budget) + ' over budget'
+          : formatCurrency(budget - spent) + ' remaining';
+      } else {
+        remaining.textContent = 'No budget set';
+      }
+      card.appendChild(remaining);
+
+      els.envelopeGrid.appendChild(card);
+    });
+  }
+
+  function renderCategoryOptions(){
+    var names = envelopes.map(function(e){ return e.name; });
+
+    els.txnCategorySelect.innerHTML = '';
+    if (names.length === 0){
+      var opt = document.createElement('option');
+      opt.value = 'Uncategorized';
+      opt.textContent = 'Uncategorized (add an envelope above)';
+      els.txnCategorySelect.appendChild(opt);
+    } else {
+      names.forEach(function(n){
+        var opt = document.createElement('option');
+        opt.value = n;
+        opt.textContent = n;
+        els.txnCategorySelect.appendChild(opt);
+      });
+    }
+
+    var prevFilterValue = els.txnCategoryFilter.value || 'all';
+    els.txnCategoryFilter.innerHTML = '<option value="all">All categories</option>';
+    var allCatsSet = {};
+    names.forEach(function(n){ allCatsSet[n] = true; });
+    transactions.forEach(function(t){ if (t.category) allCatsSet[t.category] = true; });
+    Object.keys(allCatsSet).sort().forEach(function(n){
+      var opt = document.createElement('option');
+      opt.value = n;
+      opt.textContent = n;
+      els.txnCategoryFilter.appendChild(opt);
+    });
+    els.txnCategoryFilter.value = Object.keys(allCatsSet).indexOf(prevFilterValue) !== -1 ? prevFilterValue : 'all';
+    categoryFilter = els.txnCategoryFilter.value;
+  }
+
+  function getFilteredSortedTxns(){
+    var list = monthTransactions().filter(function(t){
+      if (typeFilter !== 'all' && t.type !== typeFilter) return false;
+      if (categoryFilter !== 'all' && t.category !== categoryFilter) return false;
+      if (searchQuery && t.description.toLowerCase().indexOf(searchQuery.toLowerCase()) === -1) return false;
+      return true;
+    });
+
+    list.sort(function(a, b){
+      if (currentSort === 'newest') return b.date.localeCompare(a.date) || b.id - a.id;
+      if (currentSort === 'oldest') return a.date.localeCompare(b.date) || a.id - b.id;
+      if (currentSort === 'amount-high') return b.amount - a.amount;
+      if (currentSort === 'amount-low') return a.amount - b.amount;
+      if (currentSort === 'alpha') return a.description.localeCompare(b.description);
+      return 0;
+    });
+
+    return list;
+  }
+
+  function renderTransactions(){
+    var list = getFilteredSortedTxns();
+    els.txnList.innerHTML = '';
+
+    var monthCount = monthTransactions().length;
+    els.txnCountLabel.textContent = monthCount + (monthCount === 1 ? ' transaction this month' : ' transactions this month');
+
+    if (list.length === 0){
+      els.txnEmptyState.hidden = false;
+      els.txnEmptyState.textContent = monthCount === 0
+        ? 'No transactions yet for this month. Add your first one above.'
+        : 'No transactions match your search or filters.';
+      return;
+    }
+    els.txnEmptyState.hidden = true;
+
+    list.forEach(function(t){
+      if (editingTxnId === t.id){
+        els.txnList.appendChild(buildEditRow(t));
+      } else {
+        els.txnList.appendChild(buildTxnRow(t));
+      }
+    });
+  }
+
+  function buildTxnRow(t){
+    var row = document.createElement('div');
+    row.className = 'txn-row';
+
+    var dateSpan = document.createElement('span');
+    dateSpan.className = 'txn-date';
+    var d = new Date(t.date + 'T00:00:00');
+    dateSpan.textContent = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    row.appendChild(dateSpan);
+
+    var dot = document.createElement('span');
+    dot.className = 'txn-cat-dot';
+    dot.style.background = categoryColor(t.category || 'Uncategorized');
+    row.appendChild(dot);
+
+    var main = document.createElement('div');
+    main.className = 'txn-main';
+    var desc = document.createElement('div');
+    desc.className = 'txn-desc';
+    desc.textContent = t.description;
+    desc.title = 'Click to edit';
+    desc.addEventListener('click', function(){ editingTxnId = t.id; renderTransactions(); });
+    main.appendChild(desc);
+    var catPill = document.createElement('div');
+    catPill.className = 'txn-cat-pill';
+    catPill.textContent = t.category || 'Uncategorized';
+    main.appendChild(catPill);
+    row.appendChild(main);
+
+    var amt = document.createElement('span');
+    amt.className = 'txn-amount ' + t.type;
+    amt.textContent = (t.type === 'income' ? '+' : '−') + formatCurrency(t.amount).replace('-', '');
+    row.appendChild(amt);
+
+    var actions = document.createElement('div');
+    actions.className = 'txn-actions';
+    var editBtn = document.createElement('button');
+    editBtn.type = 'button';
+    editBtn.className = 'txn-icon-btn';
+    editBtn.setAttribute('aria-label', 'Edit transaction: ' + t.description);
+    editBtn.textContent = '✎';
+    editBtn.addEventListener('click', function(){ editingTxnId = t.id; renderTransactions(); });
+    actions.appendChild(editBtn);
+
+    var delBtn = document.createElement('button');
+    delBtn.type = 'button';
+    delBtn.className = 'txn-icon-btn';
+    delBtn.setAttribute('aria-label', 'Delete transaction: ' + t.description);
+    delBtn.textContent = '×';
+    delBtn.addEventListener('click', function(){
+      transactions = transactions.filter(function(x){ return x.id !== t.id; });
+      scheduleSave();
+      renderAll();
+    });
+    actions.appendChild(delBtn);
+
+    row.appendChild(actions);
+    return row;
+  }
+
+  function buildEditRow(t){
+    var row = document.createElement('div');
+    row.className = 'txn-edit-row';
+
+    var descField = document.createElement('div');
+    descField.className = 'field';
+    var descLabel = document.createElement('label');
+    descLabel.textContent = 'Description';
+    var descInput = document.createElement('input');
+    descInput.type = 'text';
+    descInput.value = t.description;
+    descInput.maxLength = 120;
+    descInput.style.minWidth = '160px';
+    descField.appendChild(descLabel);
+    descField.appendChild(descInput);
+    row.appendChild(descField);
+
+    var amtField = document.createElement('div');
+    amtField.className = 'field';
+    var amtLabel = document.createElement('label');
+    amtLabel.textContent = 'Amount';
+    var amtInput = document.createElement('input');
+    amtInput.type = 'number';
+    amtInput.min = '0';
+    amtInput.step = '0.01';
+    amtInput.value = t.amount;
+    amtInput.style.width = '100px';
+    amtField.appendChild(amtLabel);
+    amtField.appendChild(amtInput);
+    row.appendChild(amtField);
+
+    var catField = document.createElement('div');
+    catField.className = 'field';
+    var catLabel = document.createElement('label');
+    catLabel.textContent = 'Category';
+    var catSelect = document.createElement('select');
+    var names = envelopes.map(function(e){ return e.name; });
+    if (names.indexOf(t.category) === -1 && t.category) names.push(t.category);
+    if (names.length === 0) names.push('Uncategorized');
+    names.forEach(function(n){
+      var opt = document.createElement('option');
+      opt.value = n;
+      opt.textContent = n;
+      if (n === t.category) opt.selected = true;
+      catSelect.appendChild(opt);
+    });
+    catField.appendChild(catLabel);
+    catField.appendChild(catSelect);
+    row.appendChild(catField);
+
+    var dateField = document.createElement('div');
+    dateField.className = 'field';
+    var dateLabel = document.createElement('label');
+    dateLabel.textContent = 'Date';
+    var dateInput = document.createElement('input');
+    dateInput.type = 'date';
+    dateInput.value = t.date;
+    dateField.appendChild(dateLabel);
+    dateField.appendChild(dateInput);
+    row.appendChild(dateField);
+
+    var typeField = document.createElement('div');
+    typeField.className = 'field';
+    var typeLabel = document.createElement('label');
+    typeLabel.textContent = 'Type';
+    var typeSelect = document.createElement('select');
+    ['expense', 'income'].forEach(function(ty){
+      var opt = document.createElement('option');
+      opt.value = ty;
+      opt.textContent = ty.charAt(0).toUpperCase() + ty.slice(1);
+      if (ty === t.type) opt.selected = true;
+      typeSelect.appendChild(opt);
+    });
+    typeField.appendChild(typeLabel);
+    typeField.appendChild(typeSelect);
+    row.appendChild(typeField);
+
+    var saveBtn = document.createElement('button');
+    saveBtn.type = 'button';
+    saveBtn.className = 'mini-btn save';
+    saveBtn.textContent = 'Save';
+    saveBtn.addEventListener('click', function(){
+      var newDesc = descInput.value.trim();
+      var newAmt = parseFloat(amtInput.value);
+      if (!newDesc || isNaN(newAmt) || newAmt < 0 || !dateInput.value) return;
+      t.description = newDesc;
+      t.amount = newAmt;
+      t.category = catSelect.value;
+      t.date = dateInput.value;
+      t.type = typeSelect.value;
+      editingTxnId = null;
+      scheduleSave();
+      renderAll();
+    });
+    row.appendChild(saveBtn);
+
+    var cancelBtn = document.createElement('button');
+    cancelBtn.type = 'button';
+    cancelBtn.className = 'mini-btn cancel';
+    cancelBtn.textContent = 'Cancel';
+    cancelBtn.addEventListener('click', function(){
+      editingTxnId = null;
+      renderTransactions();
+    });
+    row.appendChild(cancelBtn);
+
+    return row;
+  }
+
+  function setType(type){
+    currentType = type;
+    els.typeExpenseBtn.classList.toggle('active-expense', type === 'expense');
+    els.typeIncomeBtn.classList.toggle('active-income', type === 'income');
+  }
+
+  function bindEvents(){
+    els.prevMonthBtn.addEventListener('click', function(){
+      currentMonth -= 1;
+      if (currentMonth < 0){ currentMonth = 11; currentYear -= 1; }
+      renderAll();
+    });
+    els.nextMonthBtn.addEventListener('click', function(){
+      currentMonth += 1;
+      if (currentMonth > 11){ currentMonth = 0; currentYear += 1; }
+      renderAll();
+    });
+    els.todayBtn.addEventListener('click', function(){
+      var now = new Date();
+      currentMonth = now.getMonth();
+      currentYear = now.getFullYear();
+      renderAll();
+    });
+
+    els.toggleEnvelopeFormBtn.addEventListener('click', function(){
+      els.envelopeForm.hidden = !els.envelopeForm.hidden;
+      if (!els.envelopeForm.hidden) els.envNameInput.focus();
+    });
+
+    els.addEnvelopeBtn.addEventListener('click', function(){
+      var name = els.envNameInput.value.trim();
+      var budget = parseFloat(els.envBudgetInput.value);
+      if (!name) return;
+      if (envelopes.some(function(e){ return e.name.toLowerCase() === name.toLowerCase(); })){
+        window.alert('An envelope named "' + name + '" already exists.');
+        return;
+      }
+      envelopes.push({ id: envIdCounter++, name: name, budget: isNaN(budget) || budget < 0 ? 0 : budget });
+      els.envNameInput.value = '';
+      els.envBudgetInput.value = '';
+      els.envelopeForm.hidden = true;
+      scheduleSave();
+      renderAll();
+    });
+
+    els.typeExpenseBtn.addEventListener('click', function(){ setType('expense'); });
+    els.typeIncomeBtn.addEventListener('click', function(){ setType('income'); });
+
+    els.txnForm.addEventListener('submit', function(e){
+      e.preventDefault();
+      var desc = els.txnDescInput.value.trim();
+      var amount = parseFloat(els.txnAmountInput.value);
+      var category = els.txnCategorySelect.value;
+      var date = els.txnDateInput.value || todayISO();
+      if (!desc || isNaN(amount) || amount < 0) return;
+
+      transactions.unshift({
+        id: txnIdCounter++,
+        description: desc,
+        amount: amount,
+        type: currentType,
+        category: category,
+        date: date
+      });
+
+      els.txnDescInput.value = '';
+      els.txnAmountInput.value = '';
+      els.txnDescInput.focus();
+      scheduleSave();
+      renderAll();
+    });
+
+    els.txnSearchInput.addEventListener('input', function(){
+      searchQuery = els.txnSearchInput.value;
+      renderTransactions();
+    });
+    els.txnTypeFilter.addEventListener('change', function(){
+      typeFilter = els.txnTypeFilter.value;
+      renderTransactions();
+    });
+    els.txnCategoryFilter.addEventListener('change', function(){
+      categoryFilter = els.txnCategoryFilter.value;
+      renderTransactions();
+    });
+    els.txnSortSelect.addEventListener('change', function(){
+      currentSort = els.txnSortSelect.value;
+      renderTransactions();
+    });
+  }
+
+  async function init(){
+    await loadData();
+    mountApp();
+  }
+
+  init();
+})();
+</script>
+
+</body>
+</html>
